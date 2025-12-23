@@ -2,111 +2,168 @@ import streamlit as st
 import random
 
 # --- PAGE CONFIG ---
-st.set_page_config(page_title="오늘 뭐 먹지?", page_icon="🍴", layout="centered")
+st.set_page_config(
+    page_title="오늘 뭐 먹지? | 맞춤 메뉴 추천", 
+    page_icon="🍲", 
+    layout="centered"
+)
 
-# --- CUSTOM CSS ---
+# --- STYLING ---
 st.markdown("""
     <style>
-    .main {
-        background-color: #f8f9fa;
+    /* Main Background */
+    .stApp {
+        background-color: #ffffff;
     }
-    .stButton>button {
-        width: 100%;
-        border-radius: 10px;
-        height: 3em;
-        background-color: #ff4b4b;
-        color: white;
-        border: none;
-    }
-    .stButton>button:hover {
-        background-color: #ff3333;
-        border: none;
-        color: white;
-    }
-    .result-card {
-        background-color: white;
-        padding: 2rem;
-        border-radius: 15px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    
+    /* Header Style */
+    .main-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #1E1E1E;
         text-align: center;
-        margin-top: 2rem;
+        margin-bottom: 0.5rem;
     }
-    .recommend-title {
-        color: #ff4b4b;
-        font-weight: bold;
-        font-size: 24px;
+    
+    .sub-title {
+        font-size: 1rem;
+        color: #666666;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    /* Card Design */
+    .result-card {
+        background-color: #F9F9F9;
+        border: 1px solid #EEEEEE;
+        padding: 2.5rem;
+        border-radius: 20px;
+        text-align: center;
+        margin-top: 1.5rem;
+    }
+    
+    .menu-name {
+        font-size: 2.2rem;
+        color: #FF4B4B;
+        font-weight: 700;
+        margin: 10px 0;
+    }
+    
+    .similar-badge {
+        display: inline-block;
+        background-color: #FFE5E5;
+        color: #FF4B4B;
+        padding: 5px 15px;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin: 5px;
+    }
+
+    /* Button Customization */
+    div.stButton > button {
+        background-color: #1E1E1E;
+        color: white;
+        border-radius: 12px;
+        padding: 0.6rem 2rem;
+        font-weight: 600;
+        border: none;
+        width: 100%;
+        transition: all 0.3s;
+    }
+    
+    div.stButton > button:hover {
+        background-color: #FF4B4B;
+        color: white;
+        transform: translateY(-2px);
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- APP TITLE ---
-st.title("🍴 오늘 뭐 먹지?")
-st.write("4가지 질문을 통해 당신에게 딱 맞는 메뉴를 추천해 드릴게요!")
+# --- HEADER ---
+st.markdown('<h1 class="main-title">🍽️ 오늘 뭐 먹지?</h1>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">당신의 취향을 분석해 최적의 한 끼를 추천합니다.</p>', unsafe_allow_html=True)
 
-# --- MENU DATA ---
-# 구조: (종류1, 종류2, 가격대, 주재료): [추천메뉴, 유사메뉴1, 유사메뉴2]
-menu_db = {
-    ("한식", "국물형", "만원 이하", "고기"): ["감자탕", "순대국", "뼈해장국"],
-    ("한식", "비빔/볶음형", "만원 이하", "고기"): ["제육볶음", "불고기덮밥", "육회비빔밥"],
-    ("한식", "국물형", "만원 이상", "고기"): ["한우 소머리국밥", "갈비탕", "곰탕"],
-    ("일식", "비빔/볶음형", "만원 이상", "해산물"): ["카이센동", "회덮밥", "초밥"],
-    ("중식", "국물형", "만원 이하", "채소"): ["짬뽕 (채수 베이스)", "울면", "기스면"],
-    ("양식", "비빔/볶음형", "만원 이상", "면/빵"): ["알리오올리오", "까르보나라", "봉골레 파스타"],
-    # ... 데이터가 없을 경우를 대비해 기본값 로직 추가 필요
+# --- DATASET ---
+# (Category, Style, Budget, Ingredient): [Recommended, Similar1, Similar2]
+MENU_DATA = {
+    ("한식", "국물 요리", "1만원 이하", "고기"): ["순대국", "뼈해장국", "돼지국밥"],
+    ("한식", "볶음/비빔 요리", "1만원 이하", "고기"): ["제육볶음", "불고기 덮밥", "비빔밥"],
+    ("한식", "국물 요리", "1만원 이상", "고기"): ["갈비탕", "소고기 전골", "곰탕"],
+    ("한식", "국물 요리", "1만원 이하", "해산물"): ["해물라면", "동태탕", "순두부찌개"],
+    
+    ("일식", "볶음/비빔 요리", "1만원 이상", "해산물"): ["사케동", "초밥 세트", "카이센동"],
+    ("일식", "볶음/비빔 요리", "1만원 이하", "고기"): ["가츠동", "규동", "돈까스"],
+    ("일식", "면 요리", "1만원 이하", "면/빵"): ["라멘", "우동", "소바"],
+    
+    ("중식", "국물 요리", "1만원 이하", "고기/해산물"): ["짬뽕", "우육면", "마라탕"],
+    ("중식", "볶음/비빔 요리", "1만원 이하", "면/빵"): ["짜장면", "볶음밥", "잡채밥"],
+    ("중식", "볶음/비빔 요리", "1만원 이상", "고기"): ["꿔바로우", "유린기", "깐풍기"],
+    
+    ("양식", "면 요리", "1만원 이상", "면/빵"): ["파스타", "리조또", "라자냐"],
+    ("양식", "볶음/비빔 요리", "1만원 이상", "고기"): ["스테이크", "함박 스테이크", "치킨 커틀릿"],
+    ("양식", "면 요리", "1만원 이하", "면/빵"): ["샌드위치", "파니니", "버거"],
 }
 
-def get_recommendation(q1, q2, q3, q4):
-    key = (q1, q2, q3, q4)
-    # DB에 정확한 키가 없을 경우 랜덤 추천 (데모용)
-    if key in menu_db:
-        return menu_db[key]
-    else:
-        # 간단한 매칭 로직 (랜덤 보정)
-        defaults = [
-            ["김치찌개", "된장찌개", "부대찌개"],
-            ["돈까스", "치킨까스", "규카츠"],
-            ["쌀국수", "팟타이", "나시고랭"],
-            ["샌드위치", "샐러드", "포케"],
-            ["짜장면", "짬뽕", "탕수육"]
-        ]
-        return random.choice(defaults)
+# Default categories for fallback
+FALLBACK_GROUPS = [
+    ["김치찌개", "된장찌개", "부대찌개"],
+    ["샤브샤브", "스키야키", "밀푀유나베"],
+    ["닭갈비", "찜닭", "치킨"],
+    ["마라탕", "꿔바로우", "양꼬치"]
+]
 
-# --- QUESTIONNAIRE FORM ---
-with st.form("menu_form"):
-    st.subheader("1. 어떤 스타일의 음식이 당기시나요?")
-    q1 = st.selectbox("음식 종류", ["한식", "일식", "중식", "양식", "아시안"], label_visibility="collapsed")
-
-    st.subheader("2. 선호하는 조리 형태는?")
-    q2 = st.radio("식사 형태", ["국물형", "비빔/볶음형", "간편식(빵/면)"], horizontal=True, label_visibility="collapsed")
-
-    st.subheader("3. 생각하시는 예산 범위는?")
-    q3 = st.select_slider("가격대", options=["5천원 이하", "만원 이하", "만원 이상", "3만원 이상"])
-
-    st.subheader("4. 선호하는 주재료는?")
-    q4 = st.selectbox("재료 선택", ["고기", "해산물", "채소", "면/빵"], label_visibility="collapsed")
-
-    submit_button = st.form_submit_button(label="메뉴 추천받기")
-
-# --- RESULT DISPLAY ---
-if submit_button:
-    result = get_recommendation(q1, q2, q3, q4)
+# --- QUESTIONNAIRE ---
+with st.container():
+    st.info("아래 질문에 답변해 주세요!")
     
+    col1, col2 = st.columns(2)
+    with col1:
+        q1 = st.selectbox("1. 선호하는 음식 종류", ["한식", "일식", "중식", "양식"])
+    with col2:
+        q2 = st.selectbox("2. 선호하는 조리 스타일", ["국물 요리", "볶음/비빔 요리", "면 요리"])
+        
+    col3, col4 = st.columns(2)
+    with col3:
+        q3 = st.selectbox("3. 예상 가격대", ["1만원 이하", "1만원 이상"])
+    with col4:
+        q4 = st.selectbox("4. 핵심 재료", ["고기", "해산물", "채소", "면/빵"])
+
+    submit = st.button("내 취향에 맞는 메뉴 찾기")
+
+# --- LOGIC & DISPLAY ---
+if submit:
+    # 매칭되는 데이터 찾기
+    user_key = (q1, q2, q3, q4)
+    # 완벽 매칭이 없는 경우를 대비해 일부 조건만으로 필터링하거나 랜덤 추천
+    recommendations = MENU_DATA.get(user_key)
+    
+    if not recommendations:
+        # 간단한 매칭이 안될 경우 카테고리별 랜덤 추천
+        recommendations = random.choice(FALLBACK_GROUPS)
+
+    st.markdown("---")
     st.balloons()
     
+    # 결과 카드 출력
     st.markdown(f"""
         <div class="result-card">
-            <p style="font-size: 1.2rem; color: #666;">오늘의 추천 메뉴는 바로...</p>
-            <h1 class="recommend-title">{result[0]}</h1>
-            <hr style="margin: 2rem 0;">
-            <p style="font-size: 1rem; color: #888;">이런 음식은 어떠세요?</p>
-            <div style="display: flex; justify-content: center; gap: 20px;">
-                <span style="background: #eee; padding: 5px 15px; border-radius: 20px;"># {result[1]}</span>
-                <span style="background: #eee; padding: 5px 15px; border-radius: 20px;"># {result[2]}</span>
+            <div style="color: #888; font-weight: 500; margin-bottom: 10px;">당신을 위한 추천 메뉴</div>
+            <div class="menu-name">{recommendations[0]}</div>
+            <div style="margin: 25px 0; border-bottom: 1px solid #EEE;"></div>
+            <div style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">이런 메뉴도 비슷해요!</div>
+            <div>
+                <span class="similar-badge"># {recommendations[1]}</span>
+                <span class="similar-badge"># {recommendations[2]}</span>
             </div>
         </div>
     """, unsafe_allow_html=True)
     
-    st.info(f"💡 {q1} 기반의 {q2} 요리이며, 주재료인 {q4}의 풍미를 잘 느낄 수 있는 메뉴들입니다.")
+    st.success(f"선택하신 '{q1} / {q2} / {q3} / {q4}' 조합을 바탕으로 엄선했습니다.")
 
 # --- FOOTER ---
-st.markdown("<br><p style='text-align: center; color: #aaa;'>Enjoy your meal!</p>", unsafe_allow_html=True)
+st.markdown("""
+    <div style="text-align: center; margin-top: 50px; color: #BBB; font-size: 0.8rem;">
+        © 2024 AI Menu Recommender | 맛있는 식사 되세요!
+    </div>
+""", unsafe_allow_html=True)
