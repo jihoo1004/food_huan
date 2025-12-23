@@ -11,12 +11,9 @@ st.set_page_config(
 # --- STYLING ---
 st.markdown("""
     <style>
-    /* Main Background */
     .stApp {
         background-color: #ffffff;
     }
-    
-    /* Header Style */
     .main-title {
         font-size: 2.5rem;
         font-weight: 800;
@@ -24,15 +21,12 @@ st.markdown("""
         text-align: center;
         margin-bottom: 0.5rem;
     }
-    
     .sub-title {
         font-size: 1rem;
         color: #666666;
         text-align: center;
         margin-bottom: 2rem;
     }
-
-    /* Card Design */
     .result-card {
         background-color: #ffffff;
         border: 2px solid #F0F0F0;
@@ -42,14 +36,12 @@ st.markdown("""
         margin-top: 1.5rem;
         box-shadow: 0 10px 25px rgba(0,0,0,0.05);
     }
-    
     .menu-name {
         font-size: 2.5rem;
         color: #FF4B4B;
         font-weight: 800;
         margin: 15px 0;
     }
-    
     .similar-badge {
         display: inline-block;
         background-color: #F8F9FA;
@@ -61,14 +53,6 @@ st.markdown("""
         margin: 6px;
         border: 1px solid #EAEAEA;
     }
-
-    /* Form Design */
-    .stSelectbox label, .stRadio label {
-        font-weight: 600 !important;
-        color: #333 !important;
-    }
-
-    /* Button Customization */
     div.stButton > button {
         background-color: #FF4B4B;
         color: white;
@@ -81,91 +65,96 @@ st.markdown("""
         transition: all 0.3s ease;
         box-shadow: 0 4px 12px rgba(255, 75, 75, 0.3);
     }
-    
     div.stButton > button:hover {
         background-color: #E63946;
         color: white;
         transform: translateY(-2px);
-        box-shadow: 0 6px 15px rgba(255, 75, 75, 0.4);
     }
     </style>
     """, unsafe_allow_html=True)
 
 # --- HEADER ---
 st.markdown('<h1 class="main-title">🍽️ 오늘 뭐 먹지?</h1>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">4개의 질문으로 당신의 취향에 딱 맞는 한 끼를 추천합니다.</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">당신의 답변을 분석하여 최고의 한 끼를 제안합니다.</p>', unsafe_allow_html=True)
 
-# --- DATASET ---
+# --- EXPANDED DATASET ---
 # (Category, Style, Budget, Ingredient): [Recommended, Similar1, Similar2]
 MENU_DATA = {
-    ("한식", "국물 요리", "1만원 이하", "고기"): ["순대국", "뼈해장국", "돼지국밥"],
-    ("한식", "국물 요리", "1만원 이하", "해산물"): ["동태탕", "순두부찌개", "꽃게탕"],
-    ("한식", "볶음/비빔 요리", "1만원 이하", "고기"): ["제육볶음", "불고기 덮밥", "비빔밥"],
-    ("한식", "국물 요리", "1만원 이상", "고기"): ["갈비탕", "소고기 수육 전골", "한우 소머리국밥"],
-    ("한식", "볶음/비빔 요리", "1만원 이상", "해산물"): ["아구찜", "해물찜", "낙지볶음"],
-    
-    ("일식", "볶음/비빔 요리", "1만원 이상", "해산물"): ["사케동(연어덮밥)", "초밥 세트", "카이센동"],
-    ("일식", "볶음/비빔 요리", "1만원 이하", "고기"): ["가츠동", "규동", "돈까스"],
-    ("일식", "면 요리", "1만원 이하", "면/빵"): ["돈코츠 라멘", "우동", "메밀소바"],
-    ("일식", "면 요리", "1만원 이상", "고기"): ["스테이크 덮밥", "스키야키", "샤브샤브"],
-    
-    ("중식", "국물 요리", "1만원 이하", "고기/해산물"): ["짬뽕", "우육면", "마라탕"],
-    ("중식", "볶음/비빔 요리", "1만원 이하", "면/빵"): ["짜장면", "볶음밥", "잡채밥"],
-    ("중식", "볶음/비빔 요리", "1만원 이상", "고기"): ["꿔바로우", "유린기", "깐풍기"],
-    
-    ("양식", "면 요리", "1만원 이상", "면/빵"): ["봉골레 파스타", "해산물 리조또", "라자냐"],
-    ("양식", "볶음/비빔 요리", "1만원 이상", "고기"): ["안심 스테이크", "함박 스테이크", "폭립"],
-    ("양식", "면 요리", "1만원 이하", "면/빵"): ["클럽 샌드위치", "치즈 버거", "핫도그"],
-    ("양식", "볶음/비빔 요리", "1만원 이하", "채소"): ["리코타 치즈 샐러드", "그릭 샐러드", "시저 샐러드"],
+    # 한식 (Korean)
+    ("한식", "든든한 국물", "1만원 이하", "고기"): ["순대국", "뼈해장국", "돼지국밥"],
+    ("한식", "든든한 국물", "1만원 이하", "해산물"): ["동태탕", "순두부찌개", "바지락칼국수"],
+    ("한식", "든든한 국물", "1만원 이상", "고기"): ["갈비탕", "한우곰탕", "소고기전골"],
+    ("한식", "든든한 국물", "1만원 이상", "해산물"): ["해물탕", "전복삼계탕", "연포탕"],
+    ("한식", "매콤한 볶음/비빔", "1만원 이하", "고기"): ["제육볶음", "불고기덮밥", "비빔밥"],
+    ("한식", "매콤한 볶음/비빔", "1만원 이상", "해산물"): ["아구찜", "낙지볶음", "주꾸미볶음"],
+    ("한식", "가벼운 식사", "1만원 이하", "채소"): ["보리밥뷔페", "산채비빔밥", "묵사발"],
+    ("한식", "가벼운 식사", "1만원 이하", "면/빵"): ["잔치국수", "비빔국수", "수제비"],
+
+    # 일식 (Japanese)
+    ("일식", "든든한 국물", "1만원 이하", "면/빵"): ["돈코츠 라멘", "우동", "소바"],
+    ("일식", "든든한 국물", "1만원 이상", "고기"): ["스키야키", "샤브샤브", "모츠나베"],
+    ("일식", "매콤한 볶음/비빔", "1만원 이하", "고기"): ["가츠동", "규동", "부타동"],
+    ("일식", "매콤한 볶음/비빔", "1만원 이상", "해산물"): ["사케동", "특초밥", "카이센동"],
+    ("일식", "가벼운 식사", "1만원 이하", "해산물"): ["회덮밥", "텐동", "오니기리"],
+
+    # 중식 (Chinese)
+    ("중식", "든든한 국물", "1만원 이하", "해산물"): ["짬뽕", "울면", "기스면"],
+    ("중식", "든든한 국물", "1만원 이상", "고기"): ["우육면", "훠궈", "마라탕"],
+    ("중식", "매콤한 볶음/비빔", "1만원 이하", "면/빵"): ["짜장면", "볶음밥", "마파두부덮밥"],
+    ("중식", "매콤한 볶음/비빔", "1만원 이상", "고기"): ["꿔바로우", "유린기", "깐풍기"],
+
+    # 양식 (Western)
+    ("양식", "가벼운 식사", "1만원 이하", "면/빵"): ["클럽 샌드위치", "치즈버거", "베이글"],
+    ("양식", "매콤한 볶음/비빔", "1만원 이상", "면/빵"): ["아라비아따 파스타", "해산물 리조또", "라자냐"],
+    ("양식", "든든한 국물", "1만원 이상", "고기"): ["비프 스튜", "어니언 스프", "크림 파스타"],
+    ("양식", "매콤한 볶음/비빔", "1만원 이상", "고기"): ["안심 스테이크", "폭립", "함박 스테이크"],
+    ("양식", "가벼운 식사", "1만원 이하", "채소"): ["리코타 치즈 샐러드", "그릭 샐러드", "포케"],
 }
 
 # --- QUESTIONNAIRE ---
 with st.container():
-    st.markdown("### 📝 선호도 조사")
+    st.markdown("### 📝 맞춤형 질문지")
     
     col1, col2 = st.columns(2)
     with col1:
-        q1 = st.selectbox("1. 선호하는 음식 종류", ["한식", "일식", "중식", "양식"])
+        q1 = st.selectbox("1. 어떤 종류의 음식이 끌리나요?", ["한식", "일식", "중식", "양식"])
     with col2:
-        q2 = st.selectbox("2. 선호하는 조리 스타일", ["국물 요리", "볶음/비빔 요리", "면 요리"])
+        q2 = st.selectbox("2. 선호하는 식사 스타일은?", ["든든한 국물", "매콤한 볶음/비빔", "가벼운 식사"])
         
     col3, col4 = st.columns(2)
     with col3:
-        q3 = st.radio("3. 예상 가격대", ["1만원 이하", "1만원 이상"], horizontal=True)
+        q3 = st.radio("3. 예산 범위를 선택해 주세요.", ["1만원 이하", "1만원 이상"], horizontal=True)
     with col4:
-        q4 = st.selectbox("4. 핵심 재료", ["고기", "해산물", "채소", "면/빵"])
+        q4 = st.selectbox("4. 선호하는 주재료는?", ["고기", "해산물", "채소", "면/빵"])
 
     st.markdown("<br>", unsafe_allow_html=True)
-    submit = st.button("내 맞춤 메뉴 확인하기")
+    submit = st.button("결과 보기")
 
 # --- LOGIC & DISPLAY ---
 if submit:
-    # 1. 완벽 매칭 시도
     user_key = (q1, q2, q3, q4)
     recommendations = MENU_DATA.get(user_key)
     
-    # 2. 완벽 매칭이 없을 경우 (부분 매칭 로직)
+    # 데이터가 없을 경우를 위한 스마트 폴백(Fallback) 로직
     if not recommendations:
-        # 음식 종류와 재료만으로 필터링 시도
-        filtered = [v for k, v in MENU_DATA.items() if k[0] == q1 and k[3] == q4]
-        if filtered:
-            recommendations = random.choice(filtered)
-        else:
-            # 아예 없을 경우 음식 종류만이라도 맞춤
-            filtered_by_type = [v for k, v in MENU_DATA.items() if k[0] == q1]
-            recommendations = random.choice(filtered_by_type) if filtered_by_type else ["김치찌개", "된장찌개", "순두부찌개"]
+        # 카테고리(q1)와 재료(q4)가 일치하는 것 중 랜덤 선택
+        matches = [v for k, v in MENU_DATA.items() if k[0] == q1 and k[3] == q4]
+        if not matches:
+            # 카테고리(q1)만 일치하는 것 중 선택
+            matches = [v for k, v in MENU_DATA.items() if k[0] == q1]
+            
+        recommendations = random.choice(matches) if matches else ["김치찌개", "된장찌개", "순두부찌개"]
 
     st.markdown("---")
     st.balloons()
     
-    # 결과 카드 출력
     st.markdown(f"""
         <div class="result-card">
             <div style="color: #FF4B4B; font-weight: 700; font-size: 0.9rem; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;">Recommended for You</div>
-            <div style="color: #888; font-size: 0.9rem; margin-bottom: 5px;">당신의 취향과 딱 맞는 추천 메뉴는?</div>
+            <div style="color: #888; font-size: 0.9rem; margin-bottom: 5px;">당신을 위한 맞춤 메뉴 추천</div>
             <div class="menu-name">{recommendations[0]}</div>
             <div style="margin: 30px 40px; border-bottom: 1px solid #F0F0F0;"></div>
-            <div style="color: #666; font-size: 0.85rem; font-weight: 500; margin-bottom: 15px;">유사한 스타일의 다른 음식 추천</div>
+            <div style="color: #666; font-size: 0.85rem; font-weight: 500; margin-bottom: 15px;">이 메뉴와 비슷한 유형의 추천</div>
             <div>
                 <span class="similar-badge"># {recommendations[1]}</span>
                 <span class="similar-badge"># {recommendations[2]}</span>
@@ -173,8 +162,7 @@ if submit:
         </div>
     """, unsafe_allow_html=True)
     
-    # 분석 요약 정보
-    st.info(f"선택하신 조건: **{q1} · {q2} · {q3} · {q4}**")
+    st.info(f"📍 분석 결과: **{q1}** 카테고리에서 **{q4}**를 활용한 **{q2}** 스타일의 메뉴입니다.")
 
 # --- FOOTER ---
 st.markdown("""
